@@ -1,0 +1,11 @@
+[
+    {
+        "userId" : "andrcha3",
+        "todoId" : "abc01",
+        "createdAt" : "2020-06-25T22:00:30+0000",
+        "name" : "complete udacity aws nano-degree",
+        "details" : "complete homeworks to complete the nano-degree",
+        "dueDate" : "2020-07-30",
+        "done":false
+    }
+]

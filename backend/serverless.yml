@@ -1,0 +1,103 @@
+service:
+  name: udagram-serverless-todolist-backend
+
+custom:
+  topicName: TodosTopic-${self:provider.stage}
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+  documentation:
+    models:
+      - name: CreateTodoItemRequest
+        contentType: application/json
+        schema: ${file(models/create-todoItem-request.json)}
+      models:
+      - name: UpdateTodoItemRequest
+        contentType: application/json
+        schema: ${file(models/update-todoItem-request.json)}
+
+# Add the serverless-webpack plugin
+plugins:
+  - serverless-webpack
+  - serverless-aws-documentation
+  - serverless-reqvalidator-plugin
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  environment:
+    TODO_ITEMS_TABLE: ToDo-Items-${self:provider.stage}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_ITEMS_TABLE}
+  
+
+functions:
+  GetTodos:
+    handler: src/lambda/http/getTodos.handler
+    events:
+      - http:
+          method: get
+          path: todos
+          cors: true
+
+  CreateTodo:
+    handler: src/lambda/http/createTodo.handler
+    events:
+      - http:
+          method: post
+          path: todos
+          cors: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new Todo-Item
+            description: Create a new Todo-Item
+            requestModels:
+              'application/json': CreateTodoItemRequest
+
+  #UpdateTodo:
+  #  handler: src/lambda/http/UpdateTodo.handler
+  #  events:
+  #    - http:
+  #        method: patch
+  #        path: todos/{todoId}
+  #        cors: true
+
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          method: get
+          path: hello
+
+
+resources:
+  Resources:
+    TodoDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: todoId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: todoId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.TODO_ITEMS_TABLE}
+
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
+        

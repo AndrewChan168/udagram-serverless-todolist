@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "todoItem",
+    "type": "object",
+    "properties": {
+      "userId": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "details": {
+        "type": "string"
+      },
+      "dueDate": {
+        "type": "string"
+      },
+      "done": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": false
+  }
