@@ -3,13 +3,7 @@
     "title": "todoItem",
     "type": "object",
     "properties": {
-      "userId": {
-        "type": "string"
-      },
-      "name": {
-        "type": "string"
-      },
-      "details": {
+      "itemname": {
         "type": "string"
       },
       "dueDate": {

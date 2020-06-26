@@ -1,6 +1,7 @@
 service:
   name: udagram-serverless-todolist-backend
 
+
 custom:
   topicName: TodosTopic-${self:provider.stage}
   webpack:
@@ -11,16 +12,17 @@ custom:
       - name: CreateTodoItemRequest
         contentType: application/json
         schema: ${file(models/create-todoItem-request.json)}
-      models:
       - name: UpdateTodoItemRequest
         contentType: application/json
         schema: ${file(models/update-todoItem-request.json)}
+
 
 # Add the serverless-webpack plugin
 plugins:
   - serverless-webpack
   - serverless-aws-documentation
   - serverless-reqvalidator-plugin
+
 
 provider:
   name: aws
@@ -33,9 +35,12 @@ provider:
   iamRoleStatements:
     - Effect: Allow
       Action:
+        - dynamodb:Query
         - dynamodb:Scan
         - dynamodb:GetItem
         - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
       Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_ITEMS_TABLE}
   
 
@@ -62,13 +67,27 @@ functions:
             requestModels:
               'application/json': CreateTodoItemRequest
 
-  #UpdateTodo:
-  #  handler: src/lambda/http/UpdateTodo.handler
-  #  events:
-  #    - http:
-  #        method: patch
-  #        path: todos/{todoId}
-  #        cors: true
+  UpdateTodo:
+    handler: src/lambda/http/updateTodo.handler
+    events:
+      - http:
+          method: patch
+          path: todos/{todoId}
+          cors: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Update a Todo-Item
+            description: Update a Todo-Item
+            requestModels:
+              'application/json': UpdateTodoItemRequest
+
+  DeleteTodo:
+    handler: src/lambda/http/deleteTodo.handler
+    events:
+      - http:
+          method: delete
+          path: todos/{todoId}
+          cors: true
 
   hello:
     handler: handler.hello

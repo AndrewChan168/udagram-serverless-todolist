@@ -12,24 +12,81 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     const todoId = event.pathParameters.todoId
     const parseBody = JSON.parse(event.body)
 
-    const results = await docClient.query({
-        TableName: todoItemsTable,
-        KeyConditionExpression: 'todoId=:todoId',
-        ExpressionAttributeValues: {
-            ':todoId':todoId
-        }
-    }).promise()
+    console.log("parseBody: ")
+    console.log(parseBody)
+    try{
+        const results = await docClient.query({
+            TableName: todoItemsTable,
+            KeyConditionExpression: 'todoId=:todoId',
+            ExpressionAttributeValues: {
+                ':todoId':todoId
+            }
+        }).promise()
+        console.log('query-result: ')
+        console.log(results)
 
-    if (results.Count !==0 ){
-        const updatedTodoItem = {
-            ...results[0],
-            ...parseBody
+        if (results.Count === 0) return {
+            headers: {
+                'Access-Control-Allow-Origin': '*'
+            },
+            body: "No todo item with such todoId",
+            statusCode: 404
         }
+    } catch (err) {
+        console.log(`err on query results: ${err.message}`)
+        return {
+            headers: {
+                'Access-Control-Allow-Origin': '*'
+            },
+            body: "error on querying Todo items",
+            statusCode: 500
+        }
+    } 
 
+    try{
+        //const { name, dueDate, done } = parseBody
         await docClient.update({
             TableName: todoItemsTable,
             Key: {"todoId":todoId},
-            UpdateExpression: "set todoId"
+            UpdateExpression: "set itemname=:itemname, dueDate=:dueDate, done=:done",
+            ExpressionAttributeValues: {
+                ":itemname":parseBody.itemname,
+                ":dueDate":parseBody.dueDate,
+                ":done":parseBody.done,
+            }
+        }).promise()
+        console.log('Update successfully')
+        return {
+            headers: {
+                'Access-Control-Allow-Origin': '*'
+            },
+            body:'',
+            statusCode: 200
+        }
+    }catch(err){
+        console.log(`err on update results: ${err.message}`)
+        return {
+            headers: {
+                'Access-Control-Allow-Origin': '*'
+            },
+            body: "error on updating Todo items",
+            statusCode: 500
+        }
+    }
+
+    /*
+    if (results.Count !==0 ){
+        //const updatedTodoItem = { ...parseBody }
+        const { name, dueDate, done } = parseBody
+        await docClient.update({
+            TableName: todoItemsTable,
+            Key: {"todoId":todoId},
+            UpdateExpression: "set name=:name, dueDate=:dueDate, done=:done",
+            ExpressionAttributeValues: {
+                ":name":name,
+                ":dueDate":dueDate,
+                ":done":done,
+            }
         }).promise()
 
         return {
@@ -37,7 +94,9 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
             headers: {
                 'Access-Control-Allow-Origin': '*'
               },
-            body: JSON.stringify(updatedTodoItem)
+            body: JSON.stringify({
+                name, dueDate, done, todoId
+            })
         }
     } else {
         return {
@@ -48,4 +107,5 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
             body: 'Todo-Item is not found'
         }
     }
+    */
 }
