@@ -31,6 +31,10 @@ provider:
   region: ${opt:region, 'us-east-1'}
   environment:
     TODO_ITEMS_TABLE: ToDo-Items-${self:provider.stage}
+    ITEM_DOCS_TABLE: Item-Docs-${self:provider.stage}
+    DOC_ID_INDEX: DocIdIndex
+    DOCS_S3_BUCKET: andrcha3-udagram-serverless-docs-${self:provider.stage}
+    SIGNED_URL_EXPIRATION: 300
 
   iamRoleStatements:
     - Effect: Allow
@@ -42,7 +46,21 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_ITEMS_TABLE}
-  
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:PutItem
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.ITEM_DOCS_TABLE}
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.ITEM_DOCS_TABLE}/index/${self:provider.environment.DOC_ID_INDEX}
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:GetObject
+      Resource: arn:aws:s3:::${self:provider.environment.DOCS_S3_BUCKET}/*
+
 
 functions:
   GetTodos:
@@ -89,6 +107,13 @@ functions:
           path: todos/{todoId}
           cors: true
 
+  GenerateUploadUrl:
+    handler: src/lambda/http/generateUploadUrl.handler
+    events:
+      - http:
+          method: post
+          path: todos/{todoId}/attachment
+
   hello:
     handler: handler.hello
     events:
@@ -111,6 +136,31 @@ resources:
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODO_ITEMS_TABLE}
 
+    DocsDynamoDBTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: todoId
+            AttributeType: S
+          - AttributeName: timestamp
+            AttributeType: S
+          - AttributeName: docId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: todoId
+            KeyType: HASH
+          - AttributeName: timestamp
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.DOC_ID_INDEX}
+            KeySchema:
+            - AttributeName: docId
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.ITEM_DOCS_TABLE}
+
     RequestBodyValidator:
       Type: AWS::ApiGateway::RequestValidator
       Properties:
@@ -120,3 +170,35 @@ resources:
         ValidateRequestBody: true
         ValidateRequestParameters: false
         
+    AttachmentsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.DOCS_S3_BUCKET}
+        CorsConfiguration:
+          CorsRules:
+            -
+              AllowedOrigins:
+                - '*'
+              AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - GET
+                - PUT
+                - POST
+                - DELETE
+                - HEAD
+              MaxAge: 3000
+
+    BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        PolicyDocument:
+          Id: MyPolicy
+          Version: "2012-10-17"
+          Statement:
+            - Sid: PublicReadForGetBucketObjects
+              Effect: Allow
+              Principal: '*'
+              Action: 's3:GetObject'
+              Resource: 'arn:aws:s3:::${self:provider.environment.DOCS_S3_BUCKET}/*'
+        Bucket: !Ref AttachmentsBucket
