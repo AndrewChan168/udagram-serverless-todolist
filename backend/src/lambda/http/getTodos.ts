@@ -1,22 +1,22 @@
 import 'source-map-support'
 import * as AWS from 'aws-sdk'
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import { createLogger } from '../../utils/logger'
 
 const docClient = new AWS.DynamoDB.DocumentClient()
 const todoItemsTable = process.env.TODO_ITEMS_TABLE
 
+const logger = createLogger('GetTodos');
+
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent):Promise<APIGatewayProxyResult> => {
-    console.log("Processing event:")
-    console.log(event)
+    logger.info('Getting Todo-items', event)
     
     const result = await docClient.scan({
         TableName: todoItemsTable
     }).promise()
 
-    console.log('result-json: ')
-    console.log(result)
-
     const todoItems = result.Items
+    logger.info('Query successfully')
 
     return {
         statusCode: 200,

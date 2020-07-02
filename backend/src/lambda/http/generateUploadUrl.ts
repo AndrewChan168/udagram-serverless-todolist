@@ -2,6 +2,11 @@ import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } f
 import 'source-map-support/register'
 import * as AWS  from 'aws-sdk'
 import * as uuid from 'uuid'
+import { createLogger } from '../../utils/logger'
+//import * as middy from 'middy'
+//import { cors } from 'middy/middlewares'
+
+const logger = createLogger('GenerateUploadUrl')
 
 const docClient = new AWS.DynamoDB.DocumentClient()
 const s3 = new AWS.S3({ signatureVersion: 'v4' })
@@ -12,8 +17,7 @@ const bucketName = process.env.DOCS_S3_BUCKET
 const urlExpiration = process.env.SIGNED_URL_EXPIRATION
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    console.log("Processing event: ")
-    console.log(event)
+    logger.info('Generating upload URL', event)
 
     const todoId = event.pathParameters.todoId
     const isItemValid = taskExist(todoId)
@@ -32,10 +36,9 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
     const docId = uuid.v4()
     
-    /* to be arrange function to proceed below codes */
     const newItem = await createDoc(todoId, docId, event)
     const uploadUrl = generateUploadUrl(docId)
-    console.log(`upload-URL: ${uploadUrl}`)
+    logger.info('Upload URL generate successfully', uploadUrl)
 
     return {
         statusCode: 201,
@@ -57,7 +60,7 @@ async function taskExist(itemId: string) {
         }
     }).promise();
     
-    console.log(`get task result: `, result)
+    logger.info('Get task result', result)
     return !!result.Item
 }
 
@@ -78,8 +81,9 @@ async function createDoc(todoId: string, docId: string, event:APIGatewayProxyEve
             TableName: item_docs_table,
             Item: newItem
         }).promise()
+        logger.info('generated URL inserted to database successfully')
     }catch(err){
-        console.log(`error on saving doc in S3 bucket: ${e.message}`)
+        logger.error('error on saving doc in S3 bucket', { error:err.message })
     }
 
     return newItem

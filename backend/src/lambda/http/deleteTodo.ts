@@ -1,13 +1,15 @@
 import 'source-map-support'
 import * as AWS from 'aws-sdk'
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import { createLogger } from '../../utils/logger'
 
 const docClient = new AWS.DynamoDB.DocumentClient()
 const todoItemsTable = process.env.TODO_ITEMS_TABLE
 
+const logger = createLogger('DeleteTodo');
+
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent):Promise<APIGatewayProxyResult> => {
-    console.log("Processing event:")
-    console.log(event)
+    logger.info("Deleting Todo-item", event)
 
     const todoId = event.pathParameters.todoId
 
@@ -16,7 +18,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
             TableName: todoItemsTable,
             Key: {"todoId":todoId}
         }).promise()
-        console.log('Delete successfully')
+        logger.info('Delete successfully', todoId)
         return {
             headers: {
                 'Access-Control-Allow-Origin': '*'
@@ -25,6 +27,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
             statusCode: 200
         }
     } catch(err) {
+        logger.error('Fail to delete Todo-item', { error:err.message })
         return {
             headers: {
                 'Access-Control-Allow-Origin': '*'
