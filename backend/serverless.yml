@@ -8,13 +8,13 @@ custom:
     webpackConfig: ./webpack.config.js
     includeModules: true
   documentation:
-    models:
-      - name: CreateTodoItemRequest
-        contentType: application/json
-        schema: ${file(models/create-todoItem-request.json)}
-      - name: UpdateTodoItemRequest
-        contentType: application/json
-        schema: ${file(models/update-todoItem-request.json)}
+    #models:
+    #  - name: CreateTodoItemRequest
+    #    contentType: application/json
+    #    schema: ${file(models/create-todoItem-request.json)}
+    #  - name: UpdateTodoItemRequest
+    #    contentType: application/json
+    #    schema: ${file(models/update-todoItem-request.json)}
 
 
 # Add the serverless-webpack plugin
@@ -22,6 +22,7 @@ plugins:
   - serverless-webpack
   - serverless-aws-documentation
   - serverless-reqvalidator-plugin
+  - serverless-iam-roles-per-function
 
 
 provider:
@@ -37,6 +38,12 @@ provider:
     SIGNED_URL_EXPIRATION: 300
 
   iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+      Resource:
+        - "*"
     - Effect: Allow
       Action:
         - dynamodb:Query
@@ -63,6 +70,9 @@ provider:
 
 
 functions:
+  RS256Auth:
+    handler: src/lambda/auth/auth0Authorizer.handler
+
   GetTodos:
     handler: src/lambda/http/getTodos.handler
     events:
@@ -70,6 +80,7 @@ functions:
           method: get
           path: todos
           cors: true
+          authorizer: RS256Auth
 
   CreateTodo:
     handler: src/lambda/http/createTodo.handler
@@ -78,6 +89,7 @@ functions:
           method: post
           path: todos
           cors: true
+          authorizer: RS256Auth
           reqValidatorName: RequestBodyValidator
           documentation:
             summary: Create a new Todo-Item
@@ -92,6 +104,7 @@ functions:
           method: patch
           path: todos/{todoId}
           cors: true
+          authorizer: RS256Auth
           reqValidatorName: RequestBodyValidator
           documentation:
             summary: Update a Todo-Item
@@ -106,6 +119,7 @@ functions:
           method: delete
           path: todos/{todoId}
           cors: true
+          authorizer: RS256Auth
 
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler
@@ -113,6 +127,8 @@ functions:
       - http:
           method: post
           path: todos/{todoId}/attachment
+          cors: true
+          authorizer: RS256Auth
 
   hello:
     handler: handler.hello
