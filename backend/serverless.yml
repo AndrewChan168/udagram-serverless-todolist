@@ -7,14 +7,17 @@ custom:
   webpack:
     webpackConfig: ./webpack.config.js
     includeModules: true
-  documentation:
+  #documentation:
     #models:
-    #  - name: CreateTodoItemRequest
-    #    contentType: application/json
-    #    schema: ${file(models/create-todoItem-request.json)}
-    #  - name: UpdateTodoItemRequest
-    #    contentType: application/json
-    #    schema: ${file(models/update-todoItem-request.json)}
+      #- name: CreateTodoItemRequest
+      #  contentType: application/json
+      #  schema: ${file(models/create-todoItem-request.json)}
+      #- name: UpdateTodoItemRequest
+      #  contentType: application/json
+      #  schema: ${file(models/update-todoItem-request.json)}
+      #- name: CreateItemDocRequest
+      #  contentType: application/json
+      #  schema: ${file(models/create-itemdoc-request.json)}
 
 
 # Add the serverless-webpack plugin
@@ -22,7 +25,7 @@ plugins:
   - serverless-webpack
   - serverless-aws-documentation
   - serverless-reqvalidator-plugin
-  - serverless-iam-roles-per-function
+  #- serverless-iam-roles-per-function
 
 
 provider:
@@ -33,6 +36,7 @@ provider:
   environment:
     TODO_ITEMS_TABLE: ToDo-Items-${self:provider.stage}
     ITEM_DOCS_TABLE: Item-Docs-${self:provider.stage}
+    ITEM_ID_INDEX: ItemIdIndex
     DOC_ID_INDEX: DocIdIndex
     DOCS_S3_BUCKET: andrcha3-udagram-serverless-docs-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
@@ -61,6 +65,10 @@ provider:
     - Effect: Allow
       Action:
         - dynamodb:Query
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_ITEMS_TABLE}/index/${self:provider.environment.ITEM_ID_INDEX}
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
       Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.ITEM_DOCS_TABLE}/index/${self:provider.environment.DOC_ID_INDEX}
     - Effect: Allow
       Action:
@@ -79,6 +87,15 @@ functions:
       - http:
           method: get
           path: todos
+          cors: true
+          authorizer: RS256Auth
+
+  GetDocs:
+    handler: src/lambda/http/getDocs.handler
+    events:
+      - http:
+          method: get
+          path: todos/{todoId}
           cors: true
           authorizer: RS256Auth
 
@@ -146,9 +163,18 @@ resources:
         AttributeDefinitions:
           - AttributeName: todoId
             AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
         KeySchema:
           - AttributeName: todoId
             KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.ITEM_ID_INDEX}
+            KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODO_ITEMS_TABLE}
 
@@ -158,19 +184,19 @@ resources:
         AttributeDefinitions:
           - AttributeName: todoId
             AttributeType: S
-          - AttributeName: timestamp
-            AttributeType: S
+          #- AttributeName: timestamp
+          #  AttributeType: S
           - AttributeName: docId
             AttributeType: S
         KeySchema:
-          - AttributeName: todoId
+          - AttributeName: docId
             KeyType: HASH
-          - AttributeName: timestamp
-            KeyType: RANGE
+          #- AttributeName: timestamp
+          #  KeyType: RANGE
         GlobalSecondaryIndexes:
           - IndexName: ${self:provider.environment.DOC_ID_INDEX}
             KeySchema:
-            - AttributeName: docId
+            - AttributeName: todoId
               KeyType: HASH
             Projection:
               ProjectionType: ALL
