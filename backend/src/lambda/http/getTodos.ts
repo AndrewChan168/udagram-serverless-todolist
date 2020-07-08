@@ -1,43 +1,19 @@
 import 'source-map-support'
-import * as AWS from 'aws-sdk'
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
-//import { createLogger } from '../../utils/logger'
+
 import { getUserIdFromEvent } from '../../auth/utils'
-
-const docClient = new AWS.DynamoDB.DocumentClient()
-const todoItemsTable = process.env.TODO_ITEMS_TABLE
-const todoItemIndex = process.env.ITEM_ID_INDEX
-
-//const logger = createLogger('GetTodos');
+import { getTodos } from '../../businessLogic/Items'
+import { TodoItem } from '../../models/TodoItem'
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent):Promise<APIGatewayProxyResult> => {
-    //logger.info('Getting Todo-items', event)
-    console.log('Getting Todo-items')
+    console.log(`Handling getTodo event`)
     console.log(event)
 
-    /*const result = await docClient.scan({
-        TableName: todoItemsTable
-    }).promise()*/
-
-    /** newly add code */
     const userId = getUserIdFromEvent(event)
-    //logger.info('userId got from token', userId)
-
-    console.log('userId got from token')
-    console.log(userId)
+    console.log(`userId got from token: ${userId}`)
 
     try{
-        const result = await docClient.query({
-            TableName: todoItemsTable,
-            IndexName: todoItemIndex,
-            KeyConditionExpression: 'userId=:userId',
-            ExpressionAttributeValues: {
-                ':userId':userId
-            }
-        }).promise()
-
-        const todoItems = result.Items
-
+        const todoItems:TodoItem[] = await getTodos(userId)
         return {
             statusCode: 200,
             headers:{
@@ -48,7 +24,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
             })
         }
     }catch(err){
-        console.log(`error on querying todos: ${err.message}`)
+        console.log(`error on getTodos event: ${err.message}`)
         
         return {
             statusCode: 500,
@@ -58,5 +34,4 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
             body:''
         }
     }
-    
 }
