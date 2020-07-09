@@ -1,9 +1,13 @@
 import * as AWS from 'aws-sdk'
+import * as AWSXRay from 'aws-xray-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 
 import { TodoItem } from '../models/TodoItem'
 import { ItemDoc } from '../models/ItemDoc'
 import { UpdateItem } from '../models/UpdateItem'
+//import { createLogger } from '../utils/logger'
+
+//const logger = createLogger(`Access logger`)
 
 
 class ItemsAccess{
@@ -14,7 +18,7 @@ class ItemsAccess{
     ){}
 
     async getAllTodoItems(userId:string): Promise<TodoItem[]>{
-        console.log(`getting all todo items of ${userId}`);
+        //console.log(`getting all todo items of ${userId}`);
         const result = await this.docClient.query({
             TableName: this.todoItemsTable,
             IndexName: this.todoItemIndex,
@@ -30,7 +34,7 @@ class ItemsAccess{
     }
 
     async createTodoItem(newTodoItem:TodoItem):Promise<TodoItem>{
-        console.log(`creating new todo item of userId: ${newTodoItem.userId} with toDoId: ${newTodoItem.todoId}`)
+        //console.log(`creating new todo item of userId: ${newTodoItem.userId} with toDoId: ${newTodoItem.todoId}`)
         await this.docClient.put({
             TableName: this.todoItemsTable,
             Item: newTodoItem,
@@ -39,7 +43,7 @@ class ItemsAccess{
     }
 
     async deleteTodoItem(todoId:string){
-        console.log(`deleting todoItem of ${todoId}`)
+        //console.log(`deleting todoItem of ${todoId}`)
         await this.docClient.delete({
             TableName: this.todoItemsTable,
             Key: {"todoId":todoId}
@@ -47,7 +51,7 @@ class ItemsAccess{
     }
 
     async checkTodoItemExist(todoId:string):Promise<boolean>{
-        console.log(`checking todoItem of ${todoId}`)
+        //console.log(`checking todoItem of ${todoId}`)
         const result = await this.docClient.get({
             TableName: this.todoItemsTable,
             Key: {
@@ -59,7 +63,7 @@ class ItemsAccess{
     }
 
     async updateTodoItem(updateItem:UpdateItem){
-        console.log(`updating todoItem of ${updateItem.todoId}`)
+        //console.log(`updating todoItem of ${updateItem.todoId}`)
         await this.docClient.update({
             TableName: this.todoItemsTable,
             Key: {"todoId":updateItem.todoId},
@@ -90,7 +94,7 @@ class DocsAccess{
     ){}
 
     async generateUploadUrl(docId:string):Promise<string>{
-        console.log(`generating upload url from s3 for itemDoc: ${docId} with doc`)
+        //console.log(`generating upload url from s3 for itemDoc: ${docId} with doc`)
         return this.s3.getSignedUrl('putObject', {
             Bucket: process.env.DOCS_S3_BUCKET,
             Key: docId,
@@ -99,7 +103,7 @@ class DocsAccess{
     }
 
     async createDoc(itemDoc:ItemDoc){
-        console.log(`creating doc for toDoId ${itemDoc.todoId} with itemDocId ${itemDoc.docId}`)
+        //console.log(`creating doc for toDoId ${itemDoc.todoId} with itemDocId ${itemDoc.docId}`)
         await this.docClient.put({
             TableName: this.itemDocTable,
             Item: itemDoc
@@ -107,8 +111,7 @@ class DocsAccess{
     }
 
     async getAllDocs(todoId:string):Promise<ItemDoc[]>{
-        console.log(`getting all Docs of todoId: ${todoId}`)
-
+        //console.log(`getting all Docs of todoId: ${todoId}`)
         const result = await this.docClient.query({
             TableName: this.itemDocTable,
             IndexName: this.itemDocIndex,
@@ -124,8 +127,9 @@ class DocsAccess{
     }
 }
 
+const XAWS = AWSXRay.captureAWS(AWS)
 export const docsAccess:DocsAccess = new DocsAccess(
-    new AWS.DynamoDB.DocumentClient(),
+    new XAWS.DynamoDB.DocumentClient(),
     new AWS.S3({ signatureVersion: 'v4' }),
     process.env.ITEM_DOCS_TABLE,
     process.env.DOC_ID_INDEX,

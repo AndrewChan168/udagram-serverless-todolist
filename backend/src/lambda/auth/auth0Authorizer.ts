@@ -6,18 +6,20 @@ import { verify } from 'jsonwebtoken'
 import { JwtPayload } from '../../auth/JwtPayload'
 import { createLogger } from '../../utils/logger'
 
+const logger = createLogger(`RS256Auth logger`)
+
 /**
  * A URL that can be used to download a certifcate that can be used to verify JWT token signature
  * The URL you need to go to an Auth0 page -> show Advanced Settings -> Endpoints -> JSON Web Key Set
  */
 const jwtsUrl = 'https://dev-ckdxh0zt.us.auth0.com/.well-known/jwks.json'
-const logger = createLogger('RS256Auth');
 
 export const handler:CustomAuthorizerHandler = async(event:CustomAuthorizerEvent):Promise<CustomAuthorizerResult>=>{
-    logger.info('Authorizing a user', event.authorizationToken)
+    //logger.info('Authorizing a user', event.authorizationToken)
+    logger.info(`Authorizing a user: ${event.authorizationToken}`)
     try {
       const decodedToken = await verifyToken(event.authorizationToken)
-      logger.info('User was authorized with the decoded token', decodedToken)
+      logger.info(`User was authorized with the decoded token: ${decodedToken}`)
       return {
         principalId: decodedToken.sub,
         policyDocument: {
@@ -32,7 +34,7 @@ export const handler:CustomAuthorizerHandler = async(event:CustomAuthorizerEvent
         }
     }
     } catch (err) {
-      logger.error('User was not authorized', { error:err.message })
+      logger.error(`User was not authorized: ${err.message}`)
       return {
           principalId: 'user',
           policyDocument: {
