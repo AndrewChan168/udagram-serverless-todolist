@@ -74,7 +74,6 @@ export class EditTodo extends React.PureComponent<
     return (
       <div>
         <h1>Upload new image</h1>
-
         <Form onSubmit={this.handleSubmit}>
           <Form.Field>
             <label>File</label>
@@ -93,7 +92,6 @@ export class EditTodo extends React.PureComponent<
   }
 
   renderButton() {
-
     return (
       <div>
         {this.state.uploadState === UploadState.FetchingPresignedUrl && <p>Uploading image metadata</p>}
