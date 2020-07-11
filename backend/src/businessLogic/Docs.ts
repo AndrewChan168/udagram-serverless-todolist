@@ -2,6 +2,7 @@ import * as uuid from 'uuid'
 
 import { docsAccess } from '../dataLayer/Access'
 import { ItemDoc } from '../models/ItemDoc'
+import { updateAttachmentUrl } from './Items'
 
 export async function generateUploadUrl(docId:string):Promise<string>{
     return await docsAccess.generateUploadUrl(docId)
@@ -20,6 +21,8 @@ export async function createDoc(todoId:string):Promise<ItemDoc>{
     }
 
     await docsAccess.createDoc(newDoc)
+
+    await updateAttachmentUrl(todoId, `https://${process.env.DOCS_S3_BUCKET}.s3.amazonaws.com/${docId}`)
 
     return newDoc
 }

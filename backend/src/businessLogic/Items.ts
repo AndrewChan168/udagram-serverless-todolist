@@ -33,13 +33,23 @@ export async function checkTodoItemExist(todoId:string):Promise<boolean>{
     return await itemsAccess.checkTodoItemExist(todoId);
 }
 
-export async function updateTodoItem(todoId:string, itemname:string, dueDate:string, done:boolean){
+export async function updateTodoItem(todoId:string, itemname:string, dueDate:string, done:boolean, attachmentUrl:string|null = null){
     const updateItem:UpdateItem = {
         todoId,
         itemname,
         dueDate,
-        done
+        done,
+        attachmentUrl
     }
 
     await itemsAccess.updateTodoItem(updateItem)
+}
+
+export async function updateAttachmentUrl(todoId:string, attachmentUrl:string){
+    const updateItem:UpdateItem = {
+        todoId,
+        attachmentUrl
+    }
+
+    await itemsAccess.updateAttachmentUrl(updateItem)
 }

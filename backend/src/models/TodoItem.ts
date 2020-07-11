@@ -5,4 +5,5 @@ export interface TodoItem {
     done:boolean,
     dueDate:string,
     createdAt:string,
+    attachmentUrl?:string
 }

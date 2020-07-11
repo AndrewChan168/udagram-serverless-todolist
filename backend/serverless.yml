@@ -184,23 +184,27 @@ functions:
         Action:
           - dynamodb:Query
           - dynamodb:GetItem
+          - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_ITEMS_TABLE}
       - Effect: Allow
         Action:
           - dynamodb:Query
           - dynamodb:GetItem
+          - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_ITEMS_TABLE}/index/${self:provider.environment.ITEM_ID_INDEX}
       - Effect: Allow
         Action:
           - dynamodb:Query
           - dynamodb:GetItem
           - dynamodb:PutItem
+          - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.ITEM_DOCS_TABLE}
       - Effect: Allow
         Action:
           - dynamodb:Query
           - dynamodb:GetItem
           - dynamodb:PutItem
+          - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.ITEM_DOCS_TABLE}/index/${self:provider.environment.DOC_ID_INDEX}
       - Effect: Allow
         Action:

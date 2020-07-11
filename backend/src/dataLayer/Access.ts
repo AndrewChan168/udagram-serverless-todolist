@@ -67,13 +67,25 @@ class ItemsAccess{
         await this.docClient.update({
             TableName: this.todoItemsTable,
             Key: {"todoId":updateItem.todoId},
-            UpdateExpression: "set itemname=:itemname, dueDate=:dueDate, done=:done",
+            UpdateExpression: "set itemname=:itemname, dueDate=:dueDate, done=:done, attachmentUrl=:attachmentUrl",
             ExpressionAttributeValues: {
                 ":itemname":updateItem.itemname,
                 ":dueDate":updateItem.dueDate,
                 ":done":updateItem.done,
+                ":attachmentUrl":updateItem.attachmentUrl
             },
             ReturnValues:"UPDATED_NEW"
+        }).promise()
+    }
+
+    async updateAttachmentUrl(updateItem:UpdateItem){
+        await this.docClient.update({
+            TableName: this.todoItemsTable,
+            Key: {"todoId":updateItem.todoId},
+            UpdateExpression: "set attachmentUrl=:attachmentUrl",
+            ExpressionAttributeValues: {
+                ":attachmentUrl":updateItem.attachmentUrl
+            }
         }).promise()
     }
 }
