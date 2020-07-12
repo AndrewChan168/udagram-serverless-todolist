@@ -87,9 +87,34 @@ export async function getUploadUrl(
 }
 
 export async function uploadFile(uploadUrl: string, file: Buffer): Promise<void> {
-  //await Axios.put(uploadUrl, file)
-  await Axios.put(uploadUrl, {body:file})
+  await Axios.put(uploadUrl, file)
+  //await Axios.put(uploadUrl, {body:file})
+  /*const config = {
+    method:'put',
+    url:uploadUrl,
+    headers:{
+      'Content-Type': 'image/jpeg'
+    },
+    data:{body:file},
+  }
+  try{
+    const response = await Axios(config)
+    console.log(JSON.stringify(response.data))
+  }catch(err){
+    console.error(`error on Axios(config) in uploadFile(): ${err.message}`)
+  }*/
 }
+
+/**
+ * const Axios = require('Axios')
+ * const fs = require('fs')
+ * 
+ * const file = fs.readFileSync('C:\\Users\\andrcha3\\Downloads\\test_image_1.jpg')
+ * 
+ * const uploadUrl = 'https://andrcha3-udagram-serverless-docs-dev.s3.amazonaws.com/289e1486-5e4b-441c-9241-f0edc41f165f?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAVGJ2EZIC7FQX4GHO%2F20200712%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20200712T064226Z&X-Amz-Expires=300&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEK%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCIENiq3VhswxMraMhIAx6coEMCVZJzW5qjlJEd58EJEfrAiEA1H1Wv7uzr9EHPbEai88%2B0%2F27rRpzpJmITmQS5ORQNioq8AEIWBAAGgwzNTcxNDExMDUxNTciDH%2Fcgrp%2B1iPxS%2FqpRirNASGEdLfjC7JVysF3ntpV%2FZLCb5Gg98L1%2FfLRzKU%2BmRGBJBuYOmRAwsazwYZ77zg%2BgYw53rMi3JPh5gfjisLPCQrQ5DDrpKEj%2Br2mL5m5PACCUFpiKZTq%2BlKF0wX024rlt%2FogIxMPlihBrN78OJxOM%2F3c%2B4D%2FBrFfvB72SaXa%2FQI727UYvTB3LTS6o6FQ%2FTM%2BDpZJVf%2Fr8ZhiQ6nSs22WMHe0GNRGPRVAfvfMeYv%2BOm7JZqoSxEJ201oKS8aP7oQOzjIuAPzoBV%2BNhB%2Bn4K4w0eGq%2BAU64AFfHSs5b9htWHg15xU9IBi6U4yrmlipv6%2B5hRJDY%2F2norOPPrcWPbgOymC8XD8WOg83xQdE23uelSlNzUJfA5yywUJ5P8K8XLnGwFv%2B4BuED6arU5wkUvS%2BdKSchtfTwK9gIOatSnDqzdTe3nwnqo8dT8HEVjHTWXjsRhjQPuXyum4B3U11iYWuSPQeUAxdwGvPhENuQX4I9BqHoKRWKNq0R74O8MXiqXFs5rZKE0Rydk5R3K73BTh4rUmuvfZwRXbFzhuFqlAc8ioMSHACWxOwDQX022QQEIDM%2FFdHQueFeA%3D%3D&X-Amz-Signature=9381b474a122ce988eccb1c0cb20e5a1fd72225c02f0207d055d6589b1e2de84&X-Amz-SignedHeaders=host'
+ * 
+ * Axios.put(uploadUrl, file).then(res=>console.log(res)).catch(err=>console.log(err.message))
+ */
 
 /**
  * const Axios = require('Axios')
